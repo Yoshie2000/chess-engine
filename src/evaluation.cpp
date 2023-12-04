@@ -92,7 +92,7 @@ Eval evaluate(Board* board) {
     }
 
     // PSQ
-    result += board->stack->psq[side]; // 5859993
+    result += board->stack->psq[side] / 4;
 
     // Small bonus for lots of "vision"/"space"
     result += 10 * __builtin_popcountll(board->stack->attackedByColor[side]);
