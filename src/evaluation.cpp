@@ -4,7 +4,7 @@
 #include "board.h"
 #include "evaluation.h"
 
-Eval PIECE_VALUES[PIECE_TYPES] = {
+const Eval PIECE_VALUES[PIECE_TYPES] = {
     100,
     290,
     310,
@@ -13,7 +13,7 @@ Eval PIECE_VALUES[PIECE_TYPES] = {
     EVAL_MATE,
 };
 
-Eval PSQ[PIECE_TYPES][64] = {
+const Eval PSQ[PIECE_TYPES][64] = {
     {
         // pawn
         0,  0,  0,  0,  0,  0,  0,  0,
@@ -92,15 +92,7 @@ Eval evaluate(Board* board) {
     }
 
     // PSQ
-    for (Piece piece = 0; piece < PIECE_TYPES; piece++) {
-        Bitboard pieceBB = board->byPiece[side][piece];
-        while (pieceBB) {
-            Square sq = popLSB(&pieceBB);
-            if (side == COLOR_BLACK)
-                sq = (63 - sq) ^ (FILE_A & RANK_8);
-            result += PSQ[piece][sq] / 2;
-        }
-    }
+    result += board->stack->psq[side]; // 5859993
 
     // Small bonus for lots of "vision"/"space"
     result += 10 * __builtin_popcountll(board->stack->attackedByColor[side]);

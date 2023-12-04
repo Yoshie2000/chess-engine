@@ -52,6 +52,7 @@ struct BoardStack {
     Bitboard attackedByPiece[2][PIECE_TYPES];
     Bitboard attackedByColor[2];
     int pieceCount[2][PIECE_TYPES];
+    Eval psq[2];
 
     uint8_t castling; // 0000 -> black queenside, black kingside, white queenside, white kingside
     // TO HERE
@@ -89,6 +90,12 @@ Bitboard slidingPieceAttacksAll(Board* board, Color side, Piece pieceType);
 
 Bitboard attackedSquares(Board* board, Color side);
 Bitboard attackedSquaresByPiece(Board* board, Color side, Piece pieceType);
+
+constexpr Square square_side(Square square, Color side) {
+    if (side == COLOR_BLACK)
+        return (63 - square) ^ (FILE_A & RANK_8);
+    return square;
+}
 
 bool isInCheck(Board* board, Color side);
 
