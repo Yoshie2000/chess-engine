@@ -10,7 +10,7 @@ Eval PIECE_VALUES[PIECE_TYPES] = {
     310,
     500,
     900,
-    0,
+    EVAL_MATE,
 };
 
 Eval PSQ[PIECE_TYPES][64] = {
@@ -86,14 +86,18 @@ template<Color side>
 Eval evaluate(Board* board) {
     Eval result = 0;
 
-    for (Piece piece = 0; piece < PIECE_TYPES; piece++) {
-        // Basic material evaluation
+    // Basic material evaluation
+    for (Piece piece = 0; piece < PIECE_TYPES - 1; piece++) {
         result += PIECE_VALUES[piece] * board->stack->pieceCount[side][piece];
+    }
 
-        // PSQ
+    // PSQ
+    for (Piece piece = 0; piece < PIECE_TYPES; piece++) {
         Bitboard pieceBB = board->byPiece[side][piece];
         while (pieceBB) {
             Square sq = popLSB(&pieceBB);
+            if (side == COLOR_BLACK)
+                sq = (63 - sq) ^ (FILE_A & RANK_8);
             result += PSQ[piece][sq];
         }
     }
@@ -105,20 +109,28 @@ Eval evaluate(Board* board) {
 }
 
 Eval evaluate(Board* board) {
-    // std::cout << "White: " << evaluate<COLOR_WHITE>(board) << ", Black: " << evaluate<COLOR_BLACK>(board) << std::endl;
     if (board->stm == COLOR_WHITE)
         return evaluate<COLOR_WHITE>(board) - evaluate<COLOR_BLACK>(board);
     else
         return evaluate<COLOR_BLACK>(board) - evaluate<COLOR_WHITE>(board);
 }
 
+void debugEval(Board* board) {
+    if (board->stm == COLOR_WHITE)
+        std::cout << evaluate(board) << " = " << evaluate<COLOR_WHITE>(board) << " - " << evaluate<COLOR_BLACK>(board) << std::endl;
+    else
+        std::cout << evaluate(board) << " = " << evaluate<COLOR_BLACK>(board) << " - " << evaluate<COLOR_WHITE>(board) << std::endl;
+}
+
 std::string formatEval(Eval value) {
     std::string evalString;
     if (value >= EVAL_MATE_IN_MAX_PLY) {
         evalString = "mate " + std::to_string(EVAL_MATE - value);
-    } else if (value <= -EVAL_MATE_IN_MAX_PLY) {
+    }
+    else if (value <= -EVAL_MATE_IN_MAX_PLY) {
         evalString = "mate " + std::to_string(-EVAL_MATE - value);
-    } else {
+    }
+    else {
         evalString = "cp " + std::to_string(value);
     }
     return evalString;
