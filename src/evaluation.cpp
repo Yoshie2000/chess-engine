@@ -98,7 +98,7 @@ Eval evaluate(Board* board) {
             Square sq = popLSB(&pieceBB);
             if (side == COLOR_BLACK)
                 sq = (63 - sq) ^ (FILE_A & RANK_8);
-            result += PSQ[piece][sq];
+            result += PSQ[piece][sq] / 2;
         }
     }
 
