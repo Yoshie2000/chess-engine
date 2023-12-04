@@ -14,6 +14,8 @@ extern Eval PIECE_VALUES[PIECE_TYPES];
 
 Eval evaluate(Board* board);
 
+void debugEval(Board* board);
+
 std::string formatEval(Eval value);
 
 constexpr Eval mateIn(int ply) {
