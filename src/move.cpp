@@ -267,6 +267,7 @@ Move MoveGen::nextMove() {
                                break;
 
         case GEN_STAGE_REMAINING:
+            int beginIndex = generatedMoves;
             generatePawn_quiet(board, &moves, &generatedMoves);
             generatePiece<PIECE_KNIGHT>(board, &moves, &generatedMoves, false);
             generatePiece<PIECE_BISHOP>(board, &moves, &generatedMoves, false);
@@ -276,6 +277,30 @@ Move MoveGen::nextMove() {
             if (!onlyCaptures && !isInCheck(board, board->stm)) {
                 generateCastling(board, &moves, &generatedMoves);
             }
+            int endIndex = generatedMoves;
+
+            int scores[MAX_MOVES];
+            for (int i = beginIndex; i < endIndex; i++) {
+                Move move = moveList[i];
+                int score = PSQ[board->pieces[moveOrigin(move)]][moveTarget(move)];
+                scores[i] = score;
+            }
+
+            for (int i = beginIndex + 1; i < endIndex; i++) {
+                int move = moveList[i];
+                int score = scores[i];
+                int j = i - 1;
+
+                while (j >= 0 && scores[j] < score) {
+                    moveList[j + 1] = moveList[j];
+                    scores[j + 1] = scores[j];
+                    j--;
+                }
+
+                moveList[j + 1] = move;
+                scores[j + 1] = score;
+            }
+
             generationStage++;
             break;
         }

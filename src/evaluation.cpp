@@ -92,7 +92,13 @@ Eval evaluate(Board* board) {
     }
 
     // PSQ
-    result += board->stack->psq[side] / 4;
+    result += board->stack->psq[side];
+
+    // Castling rights
+    constexpr uint8_t castlingKingside = side == COLOR_WHITE ? 0b0001 : 0b0100;
+    constexpr uint8_t castlingQueenside = side == COLOR_WHITE ? 0b0010 : 0b1000;
+    result += 16 * (bool) (board->stack->castling & castlingKingside);
+    result += 16 * (bool) (board->stack->castling & castlingQueenside);
 
     return result;
 }
