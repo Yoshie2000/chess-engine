@@ -91,12 +91,6 @@ Bitboard slidingPieceAttacksAll(Board* board, Color side, Piece pieceType);
 Bitboard attackedSquares(Board* board, Color side);
 Bitboard attackedSquaresByPiece(Board* board, Color side, Piece pieceType);
 
-constexpr Square square_side(Square square, Color side) {
-    if (side == COLOR_BLACK)
-        return (63 - square) ^ (FILE_A & RANK_8);
-    return square;
-}
-
 bool isInCheck(Board* board, Color side);
 
 void debugBoard(Board* board);

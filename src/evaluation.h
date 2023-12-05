@@ -13,6 +13,12 @@ const Eval EVAL_INFINITE = 31000;
 extern const Eval PIECE_VALUES[PIECE_TYPES];
 extern const Eval PSQ[PIECE_TYPES][64];
 
+constexpr Square psqIndex(Square square, Color side) {
+    if (side == COLOR_BLACK)
+        return 63 - ((63 - square) ^ (FILE_A & RANK_8));
+    return 63 - square;
+}
+
 Eval evaluate(Board* board);
 
 void debugEval(Board* board);
