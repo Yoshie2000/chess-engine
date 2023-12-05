@@ -92,7 +92,7 @@ Eval evaluate(Board* board) {
     }
 
     // PSQ
-    result += board->stack->psq[side];
+    result += board->stack->psq[side] / 2;
 
     // Castling rights
     // constexpr uint8_t castlingKingside = side == COLOR_WHITE ? 0b0001 : 0b0100;
