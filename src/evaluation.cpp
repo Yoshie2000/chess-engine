@@ -92,10 +92,10 @@ Eval evaluate(Board* board) {
     }
 
     // PSQ
-    result += board->stack->psq[side];
+    result += board->stack->psq[side] / 2;
 
     // Attacked squares
-    result += 5 * __builtin_popcount(board->stack->attackedByColor[side]);
+    result += 10 * __builtin_popcount(board->stack->attackedByColor[side]);
 
     return result;
 }
