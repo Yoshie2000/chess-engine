@@ -31,6 +31,7 @@ bool isPseudoLegal(Board* board, Move move) {
         return board->stack->castling & (board->stm == COLOR_WHITE ? (target > origin ? 0b0001 : 0b0010) : (target > origin ? 0b0100 : 0b1000));
     case MOVE_ENPASSANT:
         if (piece != PIECE_PAWN) return false;
+        if (board->byColor[1 - board->stm] & originBB) return false;
         // Check for EP flag on the right file
         return ((C64(1) << target) & board->stack->enpassantTarget) && board->pieces[target - UP[board->stm]] == PIECE_PAWN;
     case MOVE_PROMOTION:
