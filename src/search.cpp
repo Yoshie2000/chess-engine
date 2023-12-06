@@ -24,13 +24,10 @@ uint64_t perftInternal(Board* board, int depth) {
     for (int i = 0; i < moveCount; i++) {
         Move move = moves[i];
 
-        doMove(board, &stack, move);
-
-        // This move was illegal, we remain in check after
-        if (isInCheck(board, 1 - board->stm)) {
-            undoMove(board, move);
+        if (!isLegal(board, move))
             continue;
-        }
+
+        doMove(board, &stack, move);
 
         uint64_t subNodes = perftInternal(board, depth - 1);
 
@@ -53,13 +50,10 @@ uint64_t perft(Board* board, int depth) {
     for (int i = 0; i < moveCount; i++) {
         Move move = moves[i];
 
-        doMove(board, &stack, move);
-
-        // This move was illegal, we remain in check after
-        if (isInCheck(board, 1 - board->stm)) {
-            undoMove(board, move);
+        if (!isLegal(board, move))
             continue;
-        }
+
+        doMove(board, &stack, move);
 
         uint64_t subNodes = perftInternal(board, depth - 1);
 
@@ -116,19 +110,15 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
     // Moves loop
     MoveGen movegen(board, true);
     Move move;
-    int moveCount = 0, skippedMoves = 0;
+    int moveCount = 0;
     while ((move = movegen.nextMove()) != MOVE_NONE) {
-        moveCount++;
 
-        doMove(board, &boardStack, move);
-        stack->nodes++;
-
-        // This move was illegal, we remain in check after
-        if (isInCheck(board, 1 - board->stm)) {
-            undoMove(board, move);
-            skippedMoves++;
+        if (!isLegal(board, move))
             continue;
-        }
+
+        moveCount++;
+        stack->nodes++;
+        doMove(board, &boardStack, move);
 
         // Set up pv for the next search
         (stack + 1)->pv = pv;
@@ -213,19 +203,15 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
     // Moves loop
     MoveGen movegen(board, ttMove);
     Move move;
-    int moveCount = 0, skippedMoves = 0;
+    int moveCount = 0;
     while ((move = movegen.nextMove()) != MOVE_NONE) {
-        moveCount++;
 
-        doMove(board, &boardStack, move);
-        stack->nodes++;
-
-        // This move was illegal, we remain in check after
-        if (isInCheck(board, 1 - board->stm)) {
-            undoMove(board, move);
-            skippedMoves++;
+        if (!isLegal(board, move))
             continue;
-        }
+
+        moveCount++;
+        stack->nodes++;
+        doMove(board, &boardStack, move);
 
         // Set up pv for the next search
         (stack + 1)->pv = pv;
@@ -253,7 +239,7 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
 
     }
 
-    if (moveCount == skippedMoves) {
+    if (moveCount == 0) {
         if (isInCheck(board, board->stm)) {
             return matedIn(stack->ply); // Checkmate
         }
