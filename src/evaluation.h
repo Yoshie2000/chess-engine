@@ -15,8 +15,8 @@ extern const Eval PSQ[PIECE_TYPES][64];
 
 constexpr Square psqIndex(Square square, Color side) {
     if (side == COLOR_BLACK)
-        return 63 - ((63 - square) ^ (FILE_A & RANK_8));
-    return 63 - square;
+        return 63 - square;
+    return square;
 }
 
 Eval evaluate(Board* board);
