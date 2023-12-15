@@ -457,6 +457,9 @@ Move MoveGen::nextMove() {
                     generateCastling(board, &moves, &generatedMoves);
             }
             int endIndex = generatedMoves;
+            int moves = endIndex - beginIndex;
+            if (moves > 7)
+                endIndex = beginIndex + moves / 2; 
 
             int scores[MAX_MOVES] = { 0 };
             for (int i = beginIndex; i < endIndex; i++) {
