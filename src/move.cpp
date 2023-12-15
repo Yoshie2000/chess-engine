@@ -437,7 +437,8 @@ Move MoveGen::nextMove() {
         }
                                break;
 
-        case GEN_STAGE_REMAINING:
+        case GEN_STAGE_REMAINING: {
+            int beginIndex = generatedMoves;
             // If in double check, only generate king moves
             if (board->stack->checkerCount > 1) {
                 generatePiece<PIECE_KING>(board, &moves, &generatedMoves, false, ~C64(0));
@@ -455,8 +456,36 @@ Move MoveGen::nextMove() {
                 if (!board->stack->checkers)
                     generateCastling(board, &moves, &generatedMoves);
             }
+            int endIndex = generatedMoves;
+
+            int scores[MAX_MOVES] = { 0 };
+            for (int i = beginIndex; i < endIndex; i++) {
+                Move move = moveList[i];
+                Square origin = moveOrigin(move);
+                Square target = moveTarget(move);
+                Piece piece = board->pieces[origin];
+                int score = PSQ[piece][target].mg - PSQ[piece][origin].mg;
+                scores[i] = score;
+            }
+
+            for (int i = beginIndex + 1; i < endIndex; i++) {
+                int move = moveList[i];
+                int score = scores[i];
+                int j = i - 1;
+
+                while (j >= 0 && scores[j] < score) {
+                    moveList[j + 1] = moveList[j];
+                    scores[j + 1] = scores[j];
+                    j--;
+                }
+
+                moveList[j + 1] = move;
+                scores[j + 1] = score;
+            }
+
             generationStage++;
-            break;
+        }
+                                break;
         }
     }
 
