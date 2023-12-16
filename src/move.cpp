@@ -457,9 +457,6 @@ Move MoveGen::nextMove() {
                     generateCastling(board, &moves, &generatedMoves);
             }
             int endIndex = generatedMoves;
-            int moves = endIndex - beginIndex;
-            if (moves > 7)
-                endIndex = beginIndex + moves / 2; 
 
             int scores[MAX_MOVES] = { 0 };
             for (int i = beginIndex; i < endIndex; i++) {
@@ -467,7 +464,10 @@ Move MoveGen::nextMove() {
                 Square origin = moveOrigin(move);
                 Square target = moveTarget(move);
                 Piece piece = board->pieces[origin];
+
                 int score = PSQ[piece][target].mg - PSQ[piece][origin].mg;
+                if ((move & 0x3000) == MOVE_PROMOTION)
+                    score = PIECE_VALUES[PROMOTION_PIECE[move & 0xC000]];
                 scores[i] = score;
             }
 
