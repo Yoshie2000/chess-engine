@@ -200,6 +200,9 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
     if (ttHit) {
         // bestValue = ttEntry->value;
         ttMove = ttEntry->bestMove;
+
+        if (!pvNode && depth < ttEntry->depth && board->stack->rule50_ply < 90)
+            return ttEntry->value;
     }
 
     // Reverse futility pruning
