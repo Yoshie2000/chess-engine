@@ -465,9 +465,9 @@ Move MoveGen::nextMove() {
                 Square target = moveTarget(move);
                 Piece piece = board->pieces[origin];
 
-                int score = PSQ[piece][target].mg - PSQ[piece][origin].mg;
-                if ((move & 0x3000) == MOVE_PROMOTION)
-                    score = PIECE_VALUES[PROMOTION_PIECE[move & 0xC000]];
+                int score = 0;//PSQ[piece][target].mg - PSQ[piece][origin].mg;
+                //if ((move & 0x3000) == MOVE_PROMOTION)
+                //    score = PIECE_VALUES[PROMOTION_PIECE[move & 0xC000]];
                 scores[i] = score;
             }
 
