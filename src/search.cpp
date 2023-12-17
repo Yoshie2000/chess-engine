@@ -289,7 +289,6 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
 }
 
 void Thread::tsearch() {
-    TT.clear();
     nodesSearched = 0;
 
     int maxDepth = searchParameters.depth == 0 ? MAX_PLY : searchParameters.depth;
