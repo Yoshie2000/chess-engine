@@ -318,7 +318,6 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
 }
 
 void Thread::tsearch() {
-    TT.clear();
     initHistory();
     nodesSearched = 0;
 

@@ -79,7 +79,7 @@ public:
 #ifdef __SIZEOF_INT128__
         return static_cast<uint64_t>(((static_cast<__uint128_t>(hash) * static_cast<__uint128_t>(table.size())) >> 64));
 #else 
-        return posKey % HashTable->pTable.size();
+        return hash % table.size();
 #endif
     }
 
