@@ -27,12 +27,10 @@ struct TTEntry {
     Eval value;
 
     void update(uint64_t _hash, Move _bestMove, uint8_t _depth, Eval _value) {
-        if (_depth >= depth || bestMove == MOVE_NONE) {
-            hash = (uint16_t) _hash;
-            bestMove = _bestMove;
-            depth = _depth;
-            value = _value;
-        }
+        hash = (uint16_t)_hash;
+        bestMove = _bestMove;
+        depth = _depth;
+        value = _value;
     }
 };
 
