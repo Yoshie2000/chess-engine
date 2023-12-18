@@ -380,11 +380,13 @@ Move MoveGen::nextMove() {
 
         // Generate moves for the current stage
         switch (generationStage) {
-        case GEN_STAGE_TTMOVE:
-            if (ttMove != MOVE_NONE && ttMove != MOVE_NULL && isPseudoLegal(board, ttMove))
+        case GEN_STAGE_TTMOVE: {
+            bool capture = board->pieces[moveTarget(ttMove)] != NO_PIECE || (ttMove & 0x3000) == MOVE_ENPASSANT;
+            if (ttMove != MOVE_NONE && ttMove != MOVE_NULL && (!onlyCaptures || capture) && isPseudoLegal(board, ttMove))
                 moveList[generatedMoves++] = ttMove;
             generationStage++;
-            break;
+        }
+                             break;
 
         case GEN_STAGE_CAPTURES: {
             int beginIndex = generatedMoves;

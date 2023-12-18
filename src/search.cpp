@@ -99,13 +99,34 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
 
     BoardStack boardStack;
     Move pv[MAX_PLY + 1] = { MOVE_NONE };
-    Eval bestValue;
+    Move bestMove = MOVE_NONE;
+    Eval oldAlpha = alpha;
+    Eval bestValue, staticEval;
 
     stack->nodes = 0;
     (stack + 1)->ply = stack->ply + 1;
     (stack + 1)->nodes = 0;
 
-    bestValue = evaluate(board);
+    // TT Lookup
+    bool ttHit;
+    TTEntry* ttEntry = TT.probe(board->stack->hash, &ttHit);
+    Move ttMove = ttHit ? ttEntry->bestMove : MOVE_NONE;
+    Eval ttValue = ttHit ? valueFromTt(ttEntry->value, stack->ply) : EVAL_NONE;
+    uint8_t ttFlag = ttHit ? ttEntry->flags & 0x3 : TT_NOBOUND;
+    bool ttPv = pvNode || (ttEntry->flags >> 2);
+
+    // TT cutoff
+    if (!pvNode && ttValue != EVAL_NONE && ((ttFlag == TT_UPPERBOUND && ttValue <= alpha) || (ttFlag == TT_LOWERBOUND && ttValue >= beta) || (ttFlag == TT_EXACTBOUND)))
+        return ttValue;
+
+    if (ttHit) {
+        bestValue = staticEval = ttEntry->eval != EVAL_NONE ? ttEntry->eval : evaluate(board);
+
+        if (ttValue != EVAL_NONE && ( (ttFlag == TT_UPPERBOUND && ttValue < bestValue) || (ttFlag == TT_LOWERBOUND && ttValue > bestValue) || (ttFlag == TT_EXACTBOUND) ))
+            bestValue = staticEval = ttValue;
+    } else
+        bestValue = staticEval = evaluate(board);
+
     if (bestValue >= beta)
         return beta;
     if (alpha < bestValue)
@@ -123,7 +144,7 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
     }
 
     // Moves loop
-    MoveGen movegen(board, true);
+    MoveGen movegen(board, ttMove, true);
     Move move;
     int moveCount = 0;
     while ((move = movegen.nextMove()) != MOVE_NONE) {
@@ -143,6 +164,7 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
 
         if (value > bestValue) {
             bestValue = value;
+            bestMove = move;
 
             if (value > alpha) {
                 alpha = value;
@@ -163,6 +185,10 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
     //     }
     //     return 0; // Stalemate
     // }
+
+    // Insert into TT
+    int flags = bestValue >= beta ? TT_LOWERBOUND : alpha != oldAlpha ? TT_EXACTBOUND : TT_UPPERBOUND;
+    ttEntry->update(board->stack->hash, bestMove, 0, staticEval, valueToTT(bestValue, stack->ply), ttPv, flags);
 
     return bestValue;
 }
@@ -228,6 +254,7 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
             eval = ttValue;
     } else {
         eval = evaluate(board);
+        ttEntry->update(board->stack->hash, MOVE_NONE, 0, eval, EVAL_NONE, false, TT_NOBOUND);
     }
 
     // Reverse futility pruning
