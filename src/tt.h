@@ -12,6 +12,12 @@
 
 #include "types.h"
 #include "move.h"
+#include "evaluation.h"
+
+#define TT_NOBOUND 0
+#define TT_UPPERBOUND 1
+#define TT_LOWERBOUND 2
+#define TT_EXACTBOUND 3
 
 extern uint64_t ZOBRIST_PIECE_SQUARES[PIECE_TYPES][64];
 extern uint64_t ZOBRIST_STM_BLACK;
@@ -24,67 +30,62 @@ struct TTEntry {
     uint16_t hash;
     Move bestMove;
     uint8_t depth;
+    uint8_t flags;
+    Eval eval;
     Eval value;
 
-    void update(uint64_t _hash, Move _bestMove, uint8_t _depth, Eval _value) {
+    TTEntry() {
+        hash = 0;
+        bestMove = MOVE_NONE;
+        depth = 0;
+        flags = TT_NOBOUND;
+        eval = EVAL_NONE;
+        value = EVAL_NONE;
+    }
+
+    void update(uint64_t _hash, Move _bestMove, uint8_t _depth, Eval _eval, Eval _value, bool wasPv, int flags) {
         hash = (uint16_t)_hash;
         bestMove = _bestMove;
         depth = _depth;
         value = _value;
+        eval = _eval;
+        flags = (uint8_t) (flags + (wasPv << 2));
     }
-};
-
-#define CLUSTER_SIZE 4
-
-struct TTCluster {
-    TTEntry entry[CLUSTER_SIZE];
 };
 
 class TranspositionTable {
 
-    TTCluster* table;
-    size_t clusterCount;
+    std::vector<TTEntry> table;
+    size_t entryCount;
 
 public:
 
     TranspositionTable() {
         size_t mb = 64;
 
-        clusterCount = mb * 1024 * 1024 / sizeof(TTCluster);
-        table = static_cast<TTCluster*>(std::aligned_alloc(sizeof(TTCluster), clusterCount * sizeof(TTCluster)));
+        entryCount = mb * 1024 * 1024 / sizeof(TTEntry);
+        table.resize(entryCount);
 
         clear();
     }
 
-    ~TranspositionTable() {
-        std::free(table);
+    TTEntry* probe(uint64_t hash, bool* found) {
+        uint64_t index = ttIndex(hash);
+        *found = (uint16_t)hash == table[index].hash;
+        return &table[index];
     }
 
-    TTEntry* probe(uint64_t hash, bool* found) {
-        // Find cluster
-        __extension__ using uint128 = unsigned __int128;
-        TTCluster* cluster = &table[((uint128)hash * (uint128)clusterCount) >> 64];
-
-        int smallestDepth = 0;
-        for (int i = 0; i < CLUSTER_SIZE; i++) {
-            if (cluster->entry[i].hash == (uint16_t)hash) {
-                *found = true;
-                return &cluster->entry[i];
-            }
-            if (cluster->entry[i].depth < cluster->entry[smallestDepth].depth)
-                smallestDepth = i;
-        }
-        *found = false;
-        return &cluster->entry[smallestDepth];
+    uint64_t ttIndex(uint64_t hash) {
+#ifdef __SIZEOF_INT128__
+        return static_cast<uint64_t>(((static_cast<__uint128_t>(hash) * static_cast<__uint128_t>(table.size())) >> 64));
+#else 
+        return posKey % HashTable->pTable.size();
+#endif
     }
 
     void clear() {
-        size_t maxMemsetInput = 65536;
-        size_t clustersAtOnce = maxMemsetInput / sizeof(TTCluster);
-
-        for (size_t i = 0; i < clusterCount; i += clustersAtOnce) {
-            std::memset(&table[i], 0, clustersAtOnce * sizeof(TTCluster));
-        }
+        table.clear();
+        table.resize(entryCount);
     }
 
 };
