@@ -381,7 +381,7 @@ Move MoveGen::nextMove() {
         // Generate moves for the current stage
         switch (generationStage) {
         case GEN_STAGE_TTMOVE:
-            if (ttMove != MOVE_NONE && ttMove != MOVE_NULL && isPseudoLegal(board, ttMove))
+            if (ttMove != MOVE_NONE && ttMove != MOVE_NULL && (!onlyCaptures || board->pieces[moveTarget(ttMove)] != NO_PIECE || (0x3000 & ttMove) == MOVE_ENPASSANT) && isPseudoLegal(board, ttMove))
                 moveList[generatedMoves++] = ttMove;
             generationStage++;
             break;

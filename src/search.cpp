@@ -99,22 +99,45 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
 
     BoardStack boardStack;
     Move pv[MAX_PLY + 1] = { MOVE_NONE };
-    Eval bestValue;
+    Move bestMove = MOVE_NONE;
+    Eval bestValue, staticEval;
+    Eval oldAlpha = alpha;
 
     stack->nodes = 0;
     (stack + 1)->ply = stack->ply + 1;
     (stack + 1)->nodes = 0;
 
-    bestValue = evaluate(board);
-    if (bestValue >= beta)
-        return beta;
-    if (alpha < bestValue)
-        alpha = bestValue;
-
+    // Mate distance pruning
     alpha = std::max((int)alpha, (int)matedIn(stack->ply));
     beta = std::min((int)beta, (int)mateIn(stack->ply + 1));
     if (alpha >= beta)
         return alpha;
+
+    // TT Lookup
+    bool ttHit;
+    TTEntry* ttEntry = TT.probe(board->stack->hash, &ttHit);
+    Move ttMove = ttHit ? ttEntry->bestMove : MOVE_NONE;
+    Eval ttValue = ttHit ? valueFromTt(ttEntry->value, stack->ply) : EVAL_NONE;
+    uint8_t ttFlag = ttHit ? ttEntry->flags & 0x3 : TT_NOBOUND;
+    bool ttPv = pvNode || (ttEntry->flags >> 2);
+
+    // TT cutoff
+    if (!pvNode && ttValue != EVAL_NONE && ((ttFlag == TT_UPPERBOUND && ttValue <= alpha) || (ttFlag == TT_LOWERBOUND && ttValue >= beta) || (ttFlag == TT_EXACTBOUND)))
+        return ttValue;
+
+    if (ttHit) {
+        bestValue = staticEval = ttEntry->eval != EVAL_NONE ? ttEntry->eval : evaluate(board);
+
+        if (ttValue != EVAL_NONE && ( (ttFlag == TT_UPPERBOUND && ttValue < bestValue) || (ttFlag == TT_LOWERBOUND && ttValue > bestValue) || (ttFlag == TT_EXACTBOUND) ))
+            bestValue = staticEval = ttValue;
+    } else {
+        bestValue = staticEval = evaluate(board);
+    }
+
+    if (bestValue >= beta)
+        return beta;
+    if (alpha < bestValue)
+        alpha = bestValue;
 
     // Set up pv for the next search
     if (pvNode) {
@@ -123,7 +146,7 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
     }
 
     // Moves loop
-    MoveGen movegen(board, true);
+    MoveGen movegen(board, ttMove);
     Move move;
     int moveCount = 0;
     while ((move = movegen.nextMove()) != MOVE_NONE) {
@@ -143,6 +166,7 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
 
         if (value > bestValue) {
             bestValue = value;
+            bestMove = move;
 
             if (value > alpha) {
                 alpha = value;

@@ -172,7 +172,7 @@ public:
     MoveGen(Board* board, Move ttMove, Move _killers[2]) : board(board), ttMove(ttMove), onlyCaptures(false), killers{ _killers[0], _killers[1] }, moveList{ MOVE_NONE }, generatedMoves(0), returnedMoves(0), generationStage(GEN_STAGE_TTMOVE) {
         std::fill(moveList, moveList + MAX_MOVES, MOVE_NONE);
     }
-    MoveGen(Board* board, bool onlyCaptures) : board(board), ttMove(MOVE_NONE), onlyCaptures(onlyCaptures), killers{ MOVE_NONE, MOVE_NONE }, moveList{ MOVE_NONE }, generatedMoves(0), returnedMoves(0), generationStage(GEN_STAGE_CAPTURES) {
+    MoveGen(Board* board, Move ttMove) : board(board), ttMove(ttMove), onlyCaptures(true), killers{ MOVE_NONE, MOVE_NONE }, moveList{ MOVE_NONE }, generatedMoves(0), returnedMoves(0), generationStage(GEN_STAGE_TTMOVE) {
         std::fill(moveList, moveList + MAX_MOVES, MOVE_NONE);
     }
 
