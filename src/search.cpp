@@ -122,8 +122,8 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
     bool ttPv = pvNode || (ttEntry->flags >> 2);
 
     // TT cutoff
-    if (!pvNode && ttValue != EVAL_NONE && ((ttFlag == TT_UPPERBOUND && ttValue <= alpha) || (ttFlag == TT_LOWERBOUND && ttValue >= beta) || (ttFlag == TT_EXACTBOUND)))
-        return ttValue;
+    // if (!pvNode && ttValue != EVAL_NONE && ((ttFlag == TT_UPPERBOUND && ttValue <= alpha) || (ttFlag == TT_LOWERBOUND && ttValue >= beta) || (ttFlag == TT_EXACTBOUND)))
+    //     return ttValue;
 
     if (ttHit) {
         bestValue = staticEval = ttEntry->eval != EVAL_NONE ? ttEntry->eval : evaluate(board);
@@ -182,8 +182,8 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
     }
 
     // Insert into TT
-    // int flags = bestValue >= beta ? TT_LOWERBOUND : alpha != oldAlpha ? TT_EXACTBOUND : TT_UPPERBOUND;
-    // ttEntry->update(board->stack->hash, bestMove, 0, staticEval, valueToTT(bestValue, stack->ply), ttPv, flags);
+    int flags = bestValue >= beta ? TT_LOWERBOUND : alpha != oldAlpha ? TT_EXACTBOUND : TT_UPPERBOUND;
+    ttEntry->update(board->stack->hash, bestMove, 0, staticEval, valueToTT(bestValue, stack->ply), ttPv, flags);
 
     // if (moveCount != 0 && moveCount == skippedMoves) {
     //     if (isInCheck(board, board->stm)) {
