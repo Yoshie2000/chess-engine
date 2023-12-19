@@ -460,6 +460,9 @@ void doMove(Board* board, BoardStack* newStack, Move move) {
         newStack->hash ^= ZOBRIST_CASTLING[newStack->castling & 0xF];
     }
 
+    // Prefetch TT as early as possible
+    TT.prefetch(newStack->hash);
+
     // Update king checking stuff
     assert((board->byColor[1 - board->stm] & board->byPiece[PIECE_KING]) > 0);
 
