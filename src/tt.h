@@ -35,14 +35,12 @@ struct TTEntry {
     Eval value = EVAL_NONE;
 
     void update(uint64_t _hash, Move _bestMove, uint8_t _depth, Eval _eval, Eval _value, bool wasPv, int flags) {
-        if (_depth >= depth || bestMove == MOVE_NONE) {
-            hash = (uint16_t)_hash;
-            bestMove = _bestMove;
-            depth = _depth;
-            value = _value;
-            eval = _eval;
-            flags = (uint8_t)(flags + (wasPv << 2));
-        }
+        hash = (uint16_t)_hash;
+        bestMove = _bestMove;
+        depth = _depth;
+        value = _value;
+        eval = _eval;
+        flags = (uint8_t)(flags + (wasPv << 2));
     }
 };
 
@@ -66,7 +64,9 @@ public:
         clusterCount = mb * 1024 * 1024 / sizeof(TTCluster);
         table = static_cast<TTCluster*>(std::aligned_alloc(sizeof(TTCluster), clusterCount * sizeof(TTCluster)));
 
-        clear();
+        for (size_t i = 0; i < clusterCount; i++) {
+            table[i] = TTCluster();
+        }
     }
 
     ~TranspositionTable() {
@@ -89,15 +89,6 @@ public:
         }
         *found = false;
         return &cluster->entry[smallestDepth];
-    }
-
-    void clear() {
-        // size_t maxMemsetInput = 65536;
-        // size_t clustersAtOnce = maxMemsetInput / sizeof(TTCluster);
-
-        for (size_t i = 0; i < clusterCount; i++) {
-            table[i] = TTCluster();
-        }
     }
 
 };
