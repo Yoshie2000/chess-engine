@@ -73,10 +73,13 @@ public:
         std::free(table);
     }
 
-    TTEntry* probe(uint64_t hash, bool* found) {
-        // Find cluster
+    constexpr size_t index(uint64_t hash) {
         __extension__ using uint128 = unsigned __int128;
-        TTCluster* cluster = &table[((uint128)hash * (uint128)clusterCount) >> 64];
+        return ((uint128)hash * (uint128)clusterCount) >> 64;
+    }
+
+    TTEntry* probe(uint64_t hash, bool* found) {
+        TTCluster* cluster = &table[index(hash)];
 
         int smallestDepth = 0;
         for (int i = 0; i < CLUSTER_SIZE; i++) {
@@ -92,12 +95,13 @@ public:
     }
 
     void clear() {
-        // size_t maxMemsetInput = 65536;
-        // size_t clustersAtOnce = maxMemsetInput / sizeof(TTCluster);
-
         for (size_t i = 0; i < clusterCount; i++) {
             table[i] = TTCluster();
         }
+    }
+
+    void prefetch(uint64_t hash) {
+        __builtin_prefetch((char*) &table[index(hash)]);
     }
 
 };
