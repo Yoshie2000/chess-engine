@@ -88,18 +88,24 @@ template<Color side>
 Eval evaluate(Board* board) {
     Eval result = 0;
 
-    int gamePhase = 0;
+    int gamePhaseUs = 0;
+    int gamePhaseThem = 0;
     // Basic material evaluation
     for (Piece piece = 0; piece < PIECE_TYPES - 1; piece++) {
         result += PIECE_VALUES[piece] * board->stack->pieceCount[side][piece];
-        gamePhase += GAMEPHASE_VALUES[piece] * (board->stack->pieceCount[COLOR_WHITE][piece] + board->stack->pieceCount[COLOR_BLACK][piece]);
+        gamePhaseUs += GAMEPHASE_VALUES[piece] * board->stack->pieceCount[side][piece];
+        gamePhaseThem += GAMEPHASE_VALUES[piece] * board->stack->pieceCount[1 - side][piece];
     }
 
     // PSQ
-    int mgPhase = gamePhase;
+    int mgPhase = gamePhaseUs + gamePhaseThem;
     if (mgPhase > 24) mgPhase = 24;
     int egPhase = 24 - mgPhase;
     result += (board->stack->psq[side][PHASE_MG] * mgPhase + board->stack->psq[side][PHASE_EG] * egPhase) / 24;
+
+    // Drawn endgames: not more than 1 bishop / knight remaining per side
+    if (gamePhaseUs <= 1 && gamePhaseThem <= 1)
+        return 0;
 
     return result;
 }
