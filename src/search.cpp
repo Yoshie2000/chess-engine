@@ -228,6 +228,7 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
             eval = ttValue;
     } else {
         eval = evaluate(board);
+        ttEntry->update(board->stack->hash, MOVE_NONE, 0, eval, EVAL_NONE, ttPv, TT_NOBOUND);
     }
 
     // Reverse futility pruning
