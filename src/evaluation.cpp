@@ -101,6 +101,9 @@ Eval evaluate(Board* board) {
     int egPhase = 24 - mgPhase;
     result += (board->stack->psq[side][PHASE_MG] * mgPhase + board->stack->psq[side][PHASE_EG] * egPhase) / 24;
 
+    // Mobility
+    result += __builtin_popcount(attackedSquares(board, side));
+
     return result;
 }
 
