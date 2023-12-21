@@ -94,7 +94,7 @@ Eval qsearch(Board* board, SearchStack* stack, Eval alpha, Eval beta) {
     assert(alpha >= -EVAL_INFINITE && alpha < beta && beta <= EVAL_INFINITE);
 
     // Check for stop
-    if (board->stopSearching || stack->ply >= MAX_PLY)
+    if (board->stopSearching || stack->ply >= MAX_PLY || isDraw(board, stack->ply))
         return (stack->ply >= MAX_PLY) ? evaluate(board) : 0;
 
     BoardStack boardStack;
