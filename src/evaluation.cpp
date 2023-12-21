@@ -101,6 +101,12 @@ Eval evaluate(Board* board) {
     int egPhase = 24 - mgPhase;
     result += (board->stack->psq[side][PHASE_MG] * mgPhase + board->stack->psq[side][PHASE_EG] * egPhase) / 24;
 
+    // Doubled pawns
+    Bitboard pawns = board->byPiece[PIECE_PAWN] & board->byColor[side];
+    Bitboard doubledPawns = pawns & (pawns << 8);
+    Bitboard spacedDoubledPawns = pawns & (pawns << 16);
+    result -= 30 * (__builtin_popcount(doubledPawns) + __builtin_popcount(spacedDoubledPawns));
+
     return result;
 }
 
