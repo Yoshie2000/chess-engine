@@ -595,6 +595,12 @@ bool hasRepeated(Board* board) {
 bool isDraw(Board* board, int ply) {
     if (board->stack->rule50_ply > 99)
         return true;
+    
+    // Also check for draw by insufficient material
+    int nbWhite = board->stack->pieceCount[COLOR_WHITE][PIECE_KNIGHT] + board->stack->pieceCount[COLOR_WHITE][PIECE_BISHOP];
+    int nbBlack = board->stack->pieceCount[COLOR_BLACK][PIECE_KNIGHT] + board->stack->pieceCount[COLOR_BLACK][PIECE_BISHOP];
+    if (nbWhite <= 1 && nbBlack <= 1 && __builtin_popcount(board->byColor[COLOR_BLACK] | board->byColor[COLOR_WHITE]) <= 2 + nbWhite + nbBlack)
+        return true;
 
     return board->stack->repetition && board->stack->repetition < ply;
 }
