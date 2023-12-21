@@ -105,7 +105,7 @@ Eval evaluate(Board* board) {
     Bitboard pawns = board->byPiece[PIECE_PAWN] & board->byColor[side];
     Bitboard doubledPawns = pawns & (pawns << 8);
     Bitboard spacedDoubledPawns = pawns & (pawns << 16);
-    result -= 30 * (__builtin_popcount(doubledPawns) + __builtin_popcount(spacedDoubledPawns));
+    result -= 50 * (__builtin_popcount(doubledPawns) + __builtin_popcount(spacedDoubledPawns));
 
     return result;
 }
