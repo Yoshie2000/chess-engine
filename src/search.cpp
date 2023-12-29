@@ -339,7 +339,8 @@ Eval search(Board* board, SearchStack* stack, Thread* thread, int depth, Eval al
 
 movesLoop:
     // Moves loop
-    MoveGen movegen(board, stack, ttMove, counterMoves[moveOrigin((stack - 1)->move)][moveTarget((stack - 1)->move)], stack->killers);
+    Move counterMove = stack->ply > 0 ? counterMoves[moveOrigin((stack-1)->move)][moveTarget((stack-1)->move)] : MOVE_NONE;
+    MoveGen movegen(board, stack, ttMove, counterMove, stack->killers);
     Move move;
     int moveCount = 0;
     while ((move = movegen.nextMove()) != MOVE_NONE) {
@@ -481,13 +482,17 @@ movesLoop:
 
 void Thread::tsearch() {
     nodesSearched = 0;
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
     int maxDepth = searchParameters.depth == 0 ? MAX_PLY - 1 : searchParameters.depth;
-
     Move bestMove = MOVE_NONE;
 
+    // Necessary for aspiration windows
+    Eval previousValue = EVAL_NONE;
+
     for (int depth = 1; depth <= maxDepth; depth++) {
-        SearchStack stack[MAX_PLY];
+        SearchStack stackList[MAX_PLY + 1];
+        SearchStack* stack = &stackList[1];
         Move pv[MAX_PLY + 1];
         pv[0] = MOVE_NONE;
         stack->pv = pv;
@@ -496,12 +501,52 @@ void Thread::tsearch() {
         stack->movedPiece = NO_PIECE;
         stack->killers[0] = stack->killers[1] = MOVE_NONE;
 
-        // Search
-        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-        Eval value = search<ROOT_NODE>(&rootBoard, stack, this, depth, -EVAL_INFINITE, EVAL_INFINITE, false);
-        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        // Aspiration Windows
+        Eval delta = 60;
+        Eval alpha = -EVAL_INFINITE;
+        Eval beta = EVAL_INFINITE;
+        Eval value;
 
-        nodesSearched += stack->nodes;
+        if (depth >= 6) {
+            // Set up interval for the start of this aspiration window
+            alpha = std::max(previousValue - delta, -EVAL_INFINITE);
+            beta = std::min(previousValue + delta, (int) EVAL_INFINITE);
+        }
+
+        // int aspirationWindowAttempts = 0;
+        // int failHighs = 0;
+        while (true) {
+            // aspirationWindowAttempts++;
+
+            // int searchDepth = std::max(1, depth - failHighs + (aspirationWindowAttempts + 1) / 4);
+            value = search<ROOT_NODE>(&rootBoard, stack, this, depth, alpha, beta, false);
+            nodesSearched += stack->nodes;
+
+            // Stop if we need to
+            if (rootBoard.stopSearching)
+                break;
+            
+            // Our window was too high, lower alpha for next iteration
+            if (value <= alpha) {
+                beta = (alpha + beta) / 2;
+                alpha = std::max(value - delta, -EVAL_INFINITE);
+            }
+            // Our window was too low, increase beta for next iteration
+            else if (value >= beta) {
+                beta = std::min(value + delta, (int) EVAL_INFINITE);
+            }
+            // Our window was good, increase depth for next iteration
+            else
+                break;
+            
+            if (value >= EVAL_MATE_IN_MAX_PLY) {
+                beta = EVAL_INFINITE;
+                // failHighs = 0;
+            }
+            
+            delta += delta / 2;
+        }
+        previousValue = value;
 
         if (rootBoard.stopSearching) {
             if (bestMove == MOVE_NONE)
@@ -510,9 +555,10 @@ void Thread::tsearch() {
         }
 
         // Send UCI info
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         int64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
-        int64_t nps = ms == 0 ? 0 : (int64_t)((stack->nodes) / ((double)ms / 1000));
-        std::cout << "info depth " << depth << " score " << formatEval(value) << " nodes " << stack->nodes << " time " << ms << " nps " << nps << " pv ";
+        int64_t nps = ms == 0 ? 0 : (int64_t)((nodesSearched) / ((double)ms / 1000));
+        std::cout << "info depth " << depth << " score " << formatEval(value) << " nodes " << nodesSearched << " time " << ms << " nps " << nps << " pv ";
 
         // Send PV
         bestMove = stack->pv[0];
