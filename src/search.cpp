@@ -222,6 +222,10 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
     // TT cutoff
     if (!pvNode && ttDepth >= depth && ttValue != EVAL_NONE && ((ttFlag == TT_UPPERBOUND && ttValue <= alpha) || (ttFlag == TT_LOWERBOUND && ttValue >= beta) || (ttFlag == TT_EXACTBOUND)))
         return ttValue;
+    
+    // IIR
+    if (depth >= 4 && !ttHit)
+	    depth--;
 
     Eval eval;
     if (ttHit) {
