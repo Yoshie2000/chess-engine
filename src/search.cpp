@@ -20,8 +20,8 @@ void initReductions() {
 
     for (int i = 1; i < MAX_PLY; i++) {
         for (int j = 1; j < MAX_MOVES; j++) {
-            REDUCTIONS[0][i][j] = -0.25 + log(i) * log(j) / 2.25;
-            REDUCTIONS[1][i][j] = +1.00 + log(i) * log(j) / 2.00;
+            REDUCTIONS[0][i][j] = -0.25 + log(i) * log(j) / 2.25; // non-quiet
+            REDUCTIONS[1][i][j] = +1.00 + log(i) * log(j) / 2.00; // quiet
         }
     }
 }
@@ -246,6 +246,7 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
             eval = ttValue;
     } else {
         eval = evaluate(board);
+        ttEntry->update(board->stack->hash, MOVE_NONE, 0, eval, EVAL_NONE, ttPv, TT_NOBOUND);
     }
 
     // Reverse futility pruning

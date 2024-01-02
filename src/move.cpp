@@ -480,12 +480,20 @@ Move MoveGen::nextMove() {
                 int score;
                 if (move == ttMove)
                     score = INT32_MIN;
-                else if ((move & 0x3000) == MOVE_ENPASSANT)
-                    score = 0;
-                else if ((move & 0x3000) == MOVE_PROMOTION)
-                    score = PIECE_VALUES[PROMOTION_PIECE[move >> 14]];
-                else
-                    score = PIECE_VALUES[board->pieces[moveTarget(move)]] - PIECE_VALUES[board->pieces[moveOrigin(move)]];
+                else {
+                    switch (move & 0x3000)
+                    {
+                    case MOVE_ENPASSANT:
+                        score = 0;
+                        break;
+                    case MOVE_PROMOTION:
+                        score = PIECE_VALUES[PROMOTION_PIECE[move >> 14]];
+                        break;
+                    default:
+                        score = PIECE_VALUES[board->pieces[moveTarget(move)]] - PIECE_VALUES[board->pieces[moveOrigin(move)]];
+                        break;
+                    }
+                }
                 scores[i] = score;
             }
 
