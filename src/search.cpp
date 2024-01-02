@@ -271,8 +271,12 @@ Eval search(Board* board, SearchStack* stack, int depth, Eval alpha, Eval beta) 
         
         // Very basic LMR: Late moves are being searched with less depth
         // Check if the move can exceed alpha
-        if (moveCount > 10) {
-            value = -search<NON_PV_NODE>(board, stack + 1, newDepth - 1, -(alpha + 1), -alpha);
+        if (moveCount >= 2 + 2 * pvNode && depth >= 3 && (!capture || !ttPv)) {
+            int reducedDepth = newDepth - 1;
+
+            reducedDepth -= !ttPv;
+
+            value = -search<NON_PV_NODE>(board, stack + 1, reducedDepth, -(alpha + 1), -alpha);
 
             if (value > alpha)
                 value = -search<NON_PV_NODE>(board, stack + 1, newDepth, -(alpha + 1), -alpha);
