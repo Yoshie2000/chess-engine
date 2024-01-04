@@ -342,8 +342,9 @@ movesLoop:
         if (moveCount > 6 + 8 * pvNode && depth >= 3) {
             int reducedDepth = newDepth - REDUCTIONS[!capture][depth][moveCount];
 
-            if (!ttPv)
-                reducedDepth--;
+            reducedDepth -= !ttPv;
+
+            reducedDepth += improving;
 
             reducedDepth = std::clamp(reducedDepth, 1, newDepth);
             value = -search<NON_PV_NODE>(board, stack + 1, reducedDepth, -(alpha + 1), -alpha);
