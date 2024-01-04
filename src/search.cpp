@@ -401,6 +401,9 @@ movesLoop:
             if (cutNode)
                 reducedDepth--;
 
+            if (!capture)
+                reducedDepth += std::clamp(quietHistory[board->stm][moveOrigin(move)][moveTarget(move)] / 16384, -2, 2);
+
             reducedDepth = std::clamp(reducedDepth, 1, newDepth);
             value = -search<NON_PV_NODE>(board, stack + 1, thread, reducedDepth, -(alpha + 1), -alpha, true);
 
