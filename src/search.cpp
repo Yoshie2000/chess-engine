@@ -362,6 +362,11 @@ movesLoop:
                     && !board->stack->checkers
                     && moveCount >= LMP_MARGIN[depth][improving]) {
                     skipQuiets = true;
+                } else {
+                    // Futility pruning
+                    int lmrDepth = std::max(0, depth - REDUCTIONS[!capture][depth][moveCount]);
+                    if (!board->stack->checkers && lmrDepth < 11 && eval + 250 + 150 * lmrDepth <= alpha)
+                        skipQuiets = true;
                 }
             }
 
