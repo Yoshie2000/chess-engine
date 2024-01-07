@@ -462,6 +462,9 @@ void doMove(Board* board, BoardStack* newStack, Move move) {
         newStack->hash ^= ZOBRIST_CASTLING[newStack->castling & 0xF];
     }
 
+    // Prefetch tt asap
+    TT.prefetch(newStack->hash);
+
     // Update king checking stuff
     assert((board->byColor[1 - board->stm] & board->byPiece[PIECE_KING]) > 0);
 
@@ -565,6 +568,9 @@ void doNullMove(Board* board, BoardStack* newStack) {
     newStack->rule50_ply = newStack->previous->rule50_ply + 1;
     newStack->nullmove_ply = 0;
     newStack->enpassantTarget = 0;
+
+    // Prefetch tt asap
+    TT.prefetch(newStack->hash);
 
     // Update king checking stuff
     assert((board->byColor[1 - board->stm] & board->byPiece[PIECE_KING]) > 0);
